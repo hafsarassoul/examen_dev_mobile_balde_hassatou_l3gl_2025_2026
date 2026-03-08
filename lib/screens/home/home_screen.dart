@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          'Ecran Acceuil',
+          AppStrings.noProjects,
           style: TextStyle(
             fontSize: 24,
             color: AppColors.textPrimary

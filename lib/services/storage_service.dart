@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:convert';
+import '../models/user.dart';
 /**
  * Pattern Singleton:
  * Pour avoir une seule instance
@@ -48,6 +49,49 @@ class StorageService {
 
   Future<void> setOnboardingComplete(bool value) async {
     await _prefs.setBool(_keyOnboardingConmplete, value);
+  }
+
+  // ======== Nouvelles Clés pour l'Authentification =========
+  static const String _keyUsers = 'users_list';
+  static const String _keyCurrentUser = 'current_user';
+
+  // --- MÉTHODES POUR LES UTILISATEURS ---
+
+  /// Récupère la liste de tous les utilisateurs inscrits
+  Future<List<User>> getUsers() async {
+    final String? usersJson = _prefs.getString(_keyUsers);
+    if (usersJson == null) return [];
+
+    // On décode le texte JSON en liste d'objets
+    final List<dynamic> decoded = jsonDecode(usersJson);
+    return decoded.map((u) => User.fromMap(u)).toList();
+  }
+
+  /// Sauvegarde un nouvel utilisateur dans la liste globale
+  Future<void> saveUser(User user) async {
+    final users = await getUsers();
+    users.add(user);
+    // On transforme la liste d'objets en texte JSON pour le stockage
+    await _prefs.setString(_keyUsers, jsonEncode(users.map((u) => u.toMap()).toList()));
+  }
+
+  // --- MÉTHODES POUR LA SESSION (CONNEXION) ---
+
+  /// Sauvegarde l'utilisateur actuellement connecté
+  Future<void> saveCurrentUser(User user) async {
+    await _prefs.setString(_keyCurrentUser, jsonEncode(user.toMap()));
+  }
+
+  /// Récupère l'utilisateur de la session en cours
+  User? getCurrentUser() {
+    final String? userJson = _prefs.getString(_keyCurrentUser);
+    if (userJson == null) return null;
+    return User.fromMap(jsonDecode(userJson));
+  }
+
+  /// Supprime l'utilisateur de la session (Déconnexion)
+  Future<void> removeCurrentUser() async {
+    await _prefs.remove(_keyCurrentUser);
   }
 
 }
