@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/user.dart';
+import '../models/project.dart';
 /**
  * Pattern Singleton:
  * Pour avoir une seule instance
@@ -93,5 +94,43 @@ class StorageService {
   Future<void> removeCurrentUser() async {
     await _prefs.remove(_keyCurrentUser);
   }
+
+  // ======== GESTION DES PROJETS (CRUD) =========
+  static const String _keyProjects = 'projects_list';
+
+  /// Récupère tous les projets stockés
+  Future<List<Project>> getProjects() async {
+    final String? data = _prefs.getString(_keyProjects);
+    if (data == null) return [];
+
+    final List<dynamic> decoded = jsonDecode(data);
+    return decoded.map((p) => Project.fromMap(p)).toList();
+  }
+
+  /// Sauvegarde un nouveau projet
+  Future<void> saveProject(Project project) async {
+    final projects = await getProjects();
+    projects.add(project);
+    await _prefs.setString(_keyProjects, jsonEncode(projects.map((p) => p.toMap()).toList()));
+  }
+
+  /// Met à jour un projet existant
+  Future<void> updateProject(Project project) async {
+    final projects = await getProjects();
+    final index = projects.indexWhere((p) => p.id == project.id);
+    if (index != -1) {
+      projects[index] = project;
+      await _prefs.setString(_keyProjects, jsonEncode(projects.map((p) => p.toMap()).toList()));
+    }
+  }
+
+  /// Supprime un projet par son ID
+  Future<void> deleteProject(String projectId) async {
+    final projects = await getProjects();
+    projects.removeWhere((p) => p.id == projectId);
+    await _prefs.setString(_keyProjects, jsonEncode(projects.map((p) => p.toMap()).toList()));
+  }
+
+
 
 }
