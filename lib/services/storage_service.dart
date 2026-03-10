@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/user.dart';
 import '../models/project.dart';
+import '../models/task.dart';
 /**
  * Pattern Singleton:
  * Pour avoir une seule instance
@@ -107,14 +108,14 @@ class StorageService {
     return decoded.map((p) => Project.fromMap(p)).toList();
   }
 
-  /// Sauvegarde un nouveau projet
+
   Future<void> saveProject(Project project) async {
     final projects = await getProjects();
     projects.add(project);
     await _prefs.setString(_keyProjects, jsonEncode(projects.map((p) => p.toMap()).toList()));
   }
 
-  /// Met à jour un projet existant
+
   Future<void> updateProject(Project project) async {
     final projects = await getProjects();
     final index = projects.indexWhere((p) => p.id == project.id);
@@ -124,13 +125,47 @@ class StorageService {
     }
   }
 
-  /// Supprime un projet par son ID
+
   Future<void> deleteProject(String projectId) async {
     final projects = await getProjects();
     projects.removeWhere((p) => p.id == projectId);
     await _prefs.setString(_keyProjects, jsonEncode(projects.map((p) => p.toMap()).toList()));
   }
 
+// ======== GESTION DES TÂCHES (CRUD) =========
+  static const String _keyTasks = 'tasks_list';
 
+  /// Récupère la liste de toutes les tâches
+  Future<List<Task>> getTasks() async {
+    final String? data = _prefs.getString(_keyTasks);
+    if (data == null) return [];
+
+    final List<dynamic> decoded = jsonDecode(data);
+    return decoded.map((t) => Task.fromMap(t)).toList();
+  }
+
+  /// Sauvegarde une nouvelle tâche
+  Future<void> saveTask(Task task) async {
+    final tasks = await getTasks();
+    tasks.add(task);
+    await _prefs.setString(_keyTasks, jsonEncode(tasks.map((t) => t.toMap()).toList()));
+  }
+
+  /// Met à jour une tâche existante
+  Future<void> updateTask(Task task) async {
+    final tasks = await getTasks();
+    final index = tasks.indexWhere((t) => t.id == task.id);
+    if (index != -1) {
+      tasks[index] = task;
+      await _prefs.setString(_keyTasks, jsonEncode(tasks.map((t) => t.toMap()).toList()));
+    }
+  }
+
+  /// Supprime une tâche par son ID
+  Future<void> deleteTask(String taskId) async {
+    final tasks = await getTasks();
+    tasks.removeWhere((t) => t.id == taskId);
+    await _prefs.setString(_keyTasks, jsonEncode(tasks.map((t) => t.toMap()).toList()));
+  }
 
 }
